@@ -10,8 +10,10 @@ use embassy_executor::Spawner;
 use embassy_time::{Duration, Timer};
 use esp_backtrace as _;
 use esp_hal::clock::CpuClock;
+use esp_hal::i2c::master::{Config, I2c};
 use esp_hal::timer::timg::TimerGroup;
 use log::info;
+use temp_sensor::mcp9808::{Address, MCP9808};
 
 extern crate alloc;
 
@@ -42,6 +44,13 @@ async fn main(spawner: Spawner) -> ! {
 
     // TODO: Spawn some tasks
     let _ = spawner;
+
+    let i2c = I2c::new(peripherals.I2C0, Config::default())
+        .unwrap()
+        .with_sda(peripherals.GPIO21)
+        .with_scl(peripherals.GPIO22);
+
+    let _mcp9808 = MCP9808::new(i2c, Address::Default);
 
     loop {
         info!("Hello world!");
