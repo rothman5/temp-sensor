@@ -131,15 +131,17 @@ impl Register {
 }
 
 pub trait Read: Debug + Copy + Clone {
-    fn read<I2C, E>(&mut self, i2c: &mut I2C, address: u8) -> Result<(), Error<E>>
+    fn read<I2C>(&mut self, i2c: &mut I2C, address: u8) -> Result<(), Error<I2C::Error>>
     where
-        I2C: I2c<SevenBitAddress, Error = E>;
+        I2C: I2c<SevenBitAddress>,
+        I2C::Error: Into<Error<I2C::Error>>;
 }
 
 impl Read for Register {
-    fn read<I2C, E>(&mut self, i2c: &mut I2C, address: u8) -> Result<(), Error<E>>
+    fn read<I2C>(&mut self, i2c: &mut I2C, address: u8) -> Result<(), Error<I2C::Error>>
     where
-        I2C: I2c<SevenBitAddress, Error = E>,
+        I2C: I2c<SevenBitAddress>,
+        I2C::Error: Into<Error<I2C::Error>>,
     {
         if self.get_len() == 0 || self.get_len() > 2 {
             return Err(Error::InvalidRegisterLength);
@@ -151,15 +153,17 @@ impl Read for Register {
 }
 
 pub trait Write: Read {
-    fn write<I2C, E>(&self, i2c: &mut I2C, address: u8) -> Result<(), Error<E>>
+    fn write<I2C>(&self, i2c: &mut I2C, address: u8) -> Result<(), Error<I2C::Error>>
     where
-        I2C: I2c<SevenBitAddress, Error = E>;
+        I2C: I2c<SevenBitAddress>,
+        I2C::Error: Into<Error<I2C::Error>>;
 }
 
 impl Write for Register {
-    fn write<I2C, E>(&self, i2c: &mut I2C, address: u8) -> Result<(), Error<E>>
+    fn write<I2C>(&self, i2c: &mut I2C, address: u8) -> Result<(), Error<I2C::Error>>
     where
-        I2C: I2c<SevenBitAddress, Error = E>,
+        I2C: I2c<SevenBitAddress>,
+        I2C::Error: Into<Error<I2C::Error>>,
     {
         if self.get_len() == 0 || self.get_len() > 2 {
             return Err(Error::InvalidRegisterLength);

@@ -6,14 +6,19 @@
     holding buffers for the duration of a data transfer."
 )]
 
+use core::cell::RefCell;
 use embassy_executor::Spawner;
 use embassy_time::{Duration, Timer};
+use embedded_hal_bus::i2c::RefCellDevice;
 use esp_backtrace as _;
 use esp_hal::clock::CpuClock;
 use esp_hal::i2c::master::{Config, I2c};
 use esp_hal::timer::timg::TimerGroup;
 use log::info;
 use temp_sensor::mcp9808::{Address, MCP9808};
+use temp_sensor::registers::device_id::DeviceId;
+use temp_sensor::registers::resolution::TempRes;
+use temp_sensor::registers::temperature::Temperature;
 
 extern crate alloc;
 
@@ -50,11 +55,37 @@ async fn main(spawner: Spawner) -> ! {
         .with_sda(peripherals.GPIO21)
         .with_scl(peripherals.GPIO22);
 
-    let _mcp9808 = MCP9808::new(i2c, Address::Default);
+    let i2c_cell = RefCell::new(i2c);
+
+    let mut mcp9808_1 = MCP9808::new(RefCellDevice::new(&i2c_cell), Address::Default);
+    let mut mcp9808_2 = MCP9808::new(
+        RefCellDevice::new(&i2c_cell),
+        Address::Alternate {
+            bit2: true,
+            bit1: false,
+            bit0: false,
+        },
+    );
 
     loop {
-        info!("Hello world!");
-        Timer::after(Duration::from_secs(1)).await;
+        let info_1 = mcp9808_1.get_device_info().unwrap();
+        let info_2 = mcp9808_2.get_device_info().unwrap();
+
+        let temp_1 = mcp9808_1.get_temperature().unwrap();
+        let temp_2 = mcp9808_2.get_temperature().unwrap();
+
+        info!(
+            "MCP9808 #1 [id: {:X}] - Temperature: {:.2} °C",
+            info_1.get_device_id(),
+            temp_1.get_celsius(TempRes::Deg_0_0625C)
+        );
+        info!(
+            "MCP9808 #2 [id: {:X}] - Temperature: {:.2} °C",
+            info_2.get_device_id(),
+            temp_2.get_celsius(TempRes::Deg_0_0625C)
+        );
+
+        Timer::after(Duration::from_secs(3)).await;
     }
 
     // for inspiration have a look at the examples at https://github.com/esp-rs/esp-hal/tree/esp-hal-v1.0.0-rc.1/examples/src/bin
