@@ -1,18 +1,24 @@
-use crate::registers::register::{Read, Register};
+use crate::registers::register::{Register, RegisterPointer};
 
 const MANUF_ID: u16 = 0x0054;
 
-pub trait ManufId: Read {
-    fn get_manuf_id(&self) -> u16;
-    fn is_valid_manuf(&self) -> bool;
+#[derive(Debug, Clone, Copy)]
+pub struct ManufInfo {
+    pub reg: Register,
 }
 
-impl ManufId for Register {
-    fn get_manuf_id(&self) -> u16 {
-        self.as_u16()
+impl ManufInfo {
+    pub fn new() -> Self {
+        Self {
+            reg: Register::new(RegisterPointer::ManufId, 2),
+        }
     }
 
-    fn is_valid_manuf(&self) -> bool {
+    pub fn get_manuf_id(&self) -> u16 {
+        self.reg.as_u16()
+    }
+
+    pub fn is_valid_manuf(&self) -> bool {
         self.get_manuf_id() == MANUF_ID
     }
 }

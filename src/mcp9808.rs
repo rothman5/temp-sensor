@@ -1,5 +1,8 @@
-use crate::registers::register::{Read, Register, RegisterPointer, Write};
+use crate::registers::device_id::DeviceInfo;
+use crate::registers::manuf_id::ManufInfo;
+use crate::registers::register::{Read, Write};
 use crate::registers::resolution::{Resolution, TempRes};
+use crate::registers::temperature::Temperature;
 use embedded_hal::i2c::{I2c, SevenBitAddress};
 
 const DEFAULT_ADDRESS: u8 = 0x18;
@@ -62,34 +65,28 @@ where
         self.address = address.into();
     }
 
-    pub fn get_device_info(&mut self) -> Result<Register, Error<I2C::Error>> {
-        let register = Register::new(RegisterPointer::DeviceId, 2);
-        self.read_register(register)
+    pub fn get_device_info(&mut self) -> Result<DeviceInfo, Error<I2C::Error>> {
+        let mut dev_info = DeviceInfo::new();
+        dev_info.reg.read(&mut self.i2c, self.address)?;
+        Ok(dev_info)
     }
 
-    pub fn get_manuf_info(&mut self) -> Result<Register, Error<I2C::Error>> {
-        let register = Register::new(RegisterPointer::ManufId, 2);
-        self.read_register(register)
+    pub fn get_manuf_info(&mut self) -> Result<ManufInfo, Error<I2C::Error>> {
+        let mut manuf_info = ManufInfo::new();
+        manuf_info.reg.read(&mut self.i2c, self.address)?;
+        Ok(manuf_info)
     }
 
-    pub fn get_temperature(&mut self) -> Result<Register, Error<I2C::Error>> {
-        let register = Register::new(RegisterPointer::TempAmbient, 2);
-        self.read_register(register)
+    pub fn get_temperature(&mut self) -> Result<Temperature, Error<I2C::Error>> {
+        let mut temp = Temperature::new();
+        temp.reg.read(&mut self.i2c, self.address)?;
+        Ok(temp)
     }
 
-    pub fn set_resolution(&mut self, res: TempRes) -> Result<Register, Error<I2C::Error>> {
-        let mut register = Register::new(RegisterPointer::Resolution, 2);
-        register.set_resolution(res);
-        self.write_register(register)
-    }
-
-    fn read_register<R: Read>(&mut self, mut register: R) -> Result<R, Error<I2C::Error>> {
-        register.read(&mut self.i2c, self.address)?;
-        Ok(register)
-    }
-
-    fn write_register<R: Write>(&mut self, register: R) -> Result<R, Error<I2C::Error>> {
-        register.write(&mut self.i2c, self.address)?;
-        Ok(register)
+    pub fn set_resolution(&mut self, res: TempRes) -> Result<Resolution, Error<I2C::Error>> {
+        let mut resolution = Resolution::new();
+        resolution.set_resolution(res);
+        resolution.reg.write(&mut self.i2c, self.address)?;
+        Ok(resolution)
     }
 }

@@ -1,23 +1,28 @@
-use crate::registers::register::{Read, Register};
+use crate::registers::register::{Register, RegisterPointer};
 
 const DEVICE_ID: u8 = 0x04;
 
-pub trait DeviceId: Read {
-    fn get_device_id(&self) -> u8;
-    fn get_device_rev(&self) -> u8;
-    fn is_valid_device(&self) -> bool;
+#[derive(Debug, Clone, Copy)]
+pub struct DeviceInfo {
+    pub reg: Register,
 }
 
-impl DeviceId for Register {
-    fn get_device_id(&self) -> u8 {
-        self.get_msb()
+impl DeviceInfo {
+    pub fn new() -> Self {
+        Self {
+            reg: Register::new(RegisterPointer::DeviceId, 2),
+        }
     }
 
-    fn get_device_rev(&self) -> u8 {
-        self.get_lsb()
+    pub fn get_device_id(&self) -> u8 {
+        self.reg.get_msb()
     }
 
-    fn is_valid_device(&self) -> bool {
+    pub fn get_device_rev(&self) -> u8 {
+        self.reg.get_lsb()
+    }
+
+    pub fn is_valid_device(&self) -> bool {
         self.get_device_id() == DEVICE_ID
     }
 }

@@ -16,9 +16,7 @@ use esp_hal::i2c::master::{Config, I2c};
 use esp_hal::timer::timg::TimerGroup;
 use log::info;
 use temp_sensor::mcp9808::{Address, MCP9808};
-use temp_sensor::registers::device_id::DeviceId;
 use temp_sensor::registers::resolution::TempRes;
-use temp_sensor::registers::temperature::Temperature;
 
 extern crate alloc;
 
