@@ -3,11 +3,11 @@ use crate::registers::register::{Register, RegisterPointer};
 const MANUF_ID: u16 = 0x0054;
 
 #[derive(Debug, Clone, Copy)]
-pub struct ManufInfo {
+pub struct ManInfoReg {
     pub reg: Register,
 }
 
-impl ManufInfo {
+impl ManInfoReg {
     pub fn new() -> Self {
         Self {
             reg: Register::new(RegisterPointer::ManufId, 2),

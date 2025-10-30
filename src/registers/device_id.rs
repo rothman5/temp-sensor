@@ -3,11 +3,11 @@ use crate::registers::register::{Register, RegisterPointer};
 const DEVICE_ID: u8 = 0x04;
 
 #[derive(Debug, Clone, Copy)]
-pub struct DeviceInfo {
+pub struct DevInfoReg {
     pub reg: Register,
 }
 
-impl DeviceInfo {
+impl DevInfoReg {
     pub fn new() -> Self {
         Self {
             reg: Register::new(RegisterPointer::DeviceId, 2),

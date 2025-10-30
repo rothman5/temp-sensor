@@ -33,7 +33,9 @@ embassy-net = { version = "0.7.0", features = [
   "tcp",
   "udp",
 ] }
+embassy-sync = "0.7.2"
 embedded-hal = "1.0.0"
+embedded-hal-async = "1.0.0"
 embedded-hal-bus = "0.3.0"
 embedded-io = "0.7.1"
 embedded-io-async = "0.7.0"

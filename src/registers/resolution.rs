@@ -1,11 +1,11 @@
 use crate::registers::register::{Register, RegisterPointer};
 
 #[derive(Debug, Clone, Copy)]
-pub struct Resolution {
+pub struct ResReg {
     pub reg: Register,
 }
 
-impl Resolution {
+impl ResReg {
     pub fn new() -> Self {
         Self {
             reg: Register::new(RegisterPointer::Resolution, 1),

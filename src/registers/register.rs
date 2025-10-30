@@ -1,6 +1,6 @@
 use crate::mcp9808::Error;
 use core::fmt::Debug;
-use embedded_hal::i2c::{I2c, SevenBitAddress};
+use embedded_hal_async::i2c::{I2c, SevenBitAddress};
 
 #[derive(Debug, Clone, Copy)]
 pub enum RegisterPointer {
@@ -128,17 +128,8 @@ impl Register {
     pub fn from_u16(&mut self, value: u16) {
         self.buf = value.to_le_bytes();
     }
-}
 
-pub trait Read: Debug + Copy + Clone {
-    fn read<I2C>(&mut self, i2c: &mut I2C, address: u8) -> Result<(), Error<I2C::Error>>
-    where
-        I2C: I2c<SevenBitAddress>,
-        I2C::Error: Into<Error<I2C::Error>>;
-}
-
-impl Read for Register {
-    fn read<I2C>(&mut self, i2c: &mut I2C, address: u8) -> Result<(), Error<I2C::Error>>
+    pub async fn read<I2C>(&mut self, i2c: &mut I2C, address: u8) -> Result<(), Error<I2C::Error>>
     where
         I2C: I2c<SevenBitAddress>,
         I2C::Error: Into<Error<I2C::Error>>,
@@ -147,20 +138,14 @@ impl Read for Register {
             return Err(Error::InvalidRegisterLength);
         }
 
-        i2c.write_read(address, &[self.get_ptr()], self.get_buf_mut())?;
+        let ptr = [self.get_ptr()];
+        let buf = self.get_buf_mut();
+
+        i2c.write_read(address, &ptr, buf).await?;
         Ok(())
     }
-}
 
-pub trait Write: Read {
-    fn write<I2C>(&self, i2c: &mut I2C, address: u8) -> Result<(), Error<I2C::Error>>
-    where
-        I2C: I2c<SevenBitAddress>,
-        I2C::Error: Into<Error<I2C::Error>>;
-}
-
-impl Write for Register {
-    fn write<I2C>(&self, i2c: &mut I2C, address: u8) -> Result<(), Error<I2C::Error>>
+    pub async fn write<I2C>(&self, i2c: &mut I2C, address: u8) -> Result<(), Error<I2C::Error>>
     where
         I2C: I2c<SevenBitAddress>,
         I2C::Error: Into<Error<I2C::Error>>,
@@ -173,11 +158,13 @@ impl Write for Register {
             return Err(Error::ReadOnlyRegister);
         }
 
+        let len = 1 + self.get_len();
         let mut buf = [0u8; 3];
-        buf[0] = self.get_ptr();
-        buf[1..(1 + self.get_len())].copy_from_slice(self.get_buf());
 
-        i2c.write(address, &buf[0..(1 + self.get_len())])?;
+        buf[0] = self.get_ptr();
+        buf[1..len].copy_from_slice(self.get_buf());
+
+        i2c.write(address, &buf[0..len]).await?;
         Ok(())
     }
 }

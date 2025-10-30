@@ -6,11 +6,11 @@ use crate::registers::{
 const SIGN_BIT: u8 = 0x10;
 
 #[derive(Debug, Clone, Copy)]
-pub struct Temperature {
+pub struct TempReg {
     pub reg: Register,
 }
 
-impl Temperature {
+impl TempReg {
     pub fn new() -> Self {
         Self {
             reg: Register::new(RegisterPointer::TempAmbient, 2),

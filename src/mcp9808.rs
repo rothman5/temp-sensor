@@ -1,9 +1,8 @@
-use crate::registers::device_id::DeviceInfo;
-use crate::registers::manuf_id::ManufInfo;
-use crate::registers::register::{Read, Write};
-use crate::registers::resolution::{Resolution, TempRes};
-use crate::registers::temperature::Temperature;
-use embedded_hal::i2c::{I2c, SevenBitAddress};
+use crate::registers::device_id::DevInfoReg;
+use crate::registers::manuf_id::ManInfoReg;
+use crate::registers::resolution::{ResReg, TempRes};
+use crate::registers::temperature::TempReg;
+use embedded_hal_async::i2c::{I2c, SevenBitAddress};
 
 const DEFAULT_ADDRESS: u8 = 0x18;
 
@@ -36,25 +35,15 @@ impl<E> From<E> for Error<E> {
     }
 }
 
-pub struct MCP9808<I2C> {
-    i2c: I2C,
+pub struct MCP9808 {
     address: u8,
 }
 
-impl<I2C> MCP9808<I2C>
-where
-    I2C: I2c<SevenBitAddress>,
-    I2C::Error: Into<Error<I2C::Error>>,
-{
-    pub fn new(i2c: I2C, address: Address) -> Self {
+impl MCP9808 {
+    pub fn new(address: Address) -> Self {
         Self {
-            i2c,
             address: address.into(),
         }
-    }
-
-    pub fn free(self) -> I2C {
-        self.i2c
     }
 
     pub fn get_address(&self) -> u8 {
@@ -65,28 +54,40 @@ where
         self.address = address.into();
     }
 
-    pub fn get_device_info(&mut self) -> Result<DeviceInfo, Error<I2C::Error>> {
-        let mut dev_info = DeviceInfo::new();
-        dev_info.reg.read(&mut self.i2c, self.address)?;
+    pub async fn get_device_info<I2C>(&self, i2c: &mut I2C) -> Result<DevInfoReg, Error<I2C::Error>>
+    where
+        I2C: I2c<SevenBitAddress>,
+    {
+        let mut dev_info = DevInfoReg::new();
+        dev_info.reg.read(i2c, self.address).await?;
         Ok(dev_info)
     }
 
-    pub fn get_manuf_info(&mut self) -> Result<ManufInfo, Error<I2C::Error>> {
-        let mut manuf_info = ManufInfo::new();
-        manuf_info.reg.read(&mut self.i2c, self.address)?;
+    pub async fn get_manuf_info<I2C>(&self, i2c: &mut I2C) -> Result<ManInfoReg, Error<I2C::Error>>
+    where
+        I2C: I2c<SevenBitAddress>,
+    {
+        let mut manuf_info = ManInfoReg::new();
+        manuf_info.reg.read(i2c, self.address).await?;
         Ok(manuf_info)
     }
 
-    pub fn get_temperature(&mut self) -> Result<Temperature, Error<I2C::Error>> {
-        let mut temp = Temperature::new();
-        temp.reg.read(&mut self.i2c, self.address)?;
+    pub async fn get_temp<I2C>(&self, i2c: &mut I2C) -> Result<TempReg, Error<I2C::Error>>
+    where
+        I2C: I2c<SevenBitAddress>,
+    {
+        let mut temp = TempReg::new();
+        temp.reg.read(i2c, self.address).await?;
         Ok(temp)
     }
 
-    pub fn set_resolution(&mut self, res: TempRes) -> Result<Resolution, Error<I2C::Error>> {
-        let mut resolution = Resolution::new();
-        resolution.set_resolution(res);
-        resolution.reg.write(&mut self.i2c, self.address)?;
+    pub async fn set_res<I2C>(&self, i2c: &mut I2C, r: TempRes) -> Result<ResReg, Error<I2C::Error>>
+    where
+        I2C: I2c<SevenBitAddress>,
+    {
+        let mut resolution = ResReg::new();
+        resolution.set_resolution(r);
+        resolution.reg.write(i2c, self.address).await?;
         Ok(resolution)
     }
 }
